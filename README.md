@@ -1,7 +1,3 @@
-# notion-page-create
-
-Sistema em Google Apps Script que recebe um webhook do iOS Shortcuts, extrai metadados de URLs, cria páginas no Notion e envia um relatório via Telegram.
-
 ## Como funciona
 
 1. Um iOS Shortcut dispara um HTTP POST com `target_table`, `input_data`, `engagement_selected` e `description_input`
