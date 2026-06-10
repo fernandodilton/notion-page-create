@@ -1,100 +1,100 @@
 # notion-page-create
 
-Google Apps Script system that receives a webhook from iOS Shortcuts, extracts metadata from URLs, creates pages in Notion, and sends a report via Telegram.
+Sistema em Google Apps Script que recebe um webhook do iOS Shortcuts, extrai metadados de URLs, cria páginas no Notion e envia um relatório via Telegram.
 
-## How it works
+## Como funciona
 
-1. iOS Shortcut fires an HTTP POST with `target_table`, `input_data`, `engagement_selected`, and `description_input`
-2. The system cleans the input, checks for duplicates, and routes by platform (YouTube, Spotify, or general URL)
-3. Metadata is extracted (title, cover image, favicon, release date, duration, language)
-4. A page is created in the target Notion database with the extracted properties
-5. A formatted report is sent via Telegram Bot, with a separate log message for technical details
+1. Um iOS Shortcut dispara um HTTP POST com `target_table`, `input_data`, `engagement_selected` e `description_input`
+2. O sistema limpa o input, verifica duplicidade e roteia por plataforma (YouTube, Spotify ou URL geral)
+3. Os metadados são extraídos (título, imagem de capa, favicon, data de lançamento, duração, idioma)
+4. Uma página é criada no banco de dados Notion correspondente com as propriedades mapeadas
+5. Um relatório formatado é enviado via Telegram Bot, com uma mensagem separada de logs técnicos
 
-## Supported tables
+## Tabelas suportadas
 
-| Table | Type | Notes |
+| Tabela | Tipo | Observações |
 |---|---|---|
-| Articles | Direct | Extracts release date, read time, language |
-| Audio-visual | Direct | YouTube API integration |
-| Podcasts | Direct | Spotify API integration |
-| Sites | Direct | Stores favicon as page icon, meta description |
-| Books | Relational | Link migrates to Data Log Prices |
-| Clothes | Relational | Link migrates to Data Log Prices, stores engagement |
-| Equipaments | Relational | Link migrates to Data Log Prices |
-| Read | Relational | Link migrates to Data Log Prices |
-| Dictionary | Text-only | Duplicate check by name |
-| Life wishes | Text-only | Duplicate check by name |
-| Life goals | Text-only | Duplicate check by name |
+| Articles | Direta | Extrai data de publicação, tempo de leitura, idioma |
+| Audio-visual | Direta | Integração com YouTube API |
+| Podcasts | Direta | Integração com Spotify API |
+| Sites | Direta | Favicon como ícone da página, meta description |
+| Books | Relacional | Link migra para Data Log Prices |
+| Clothes | Relacional | Link migra para Data Log Prices, armazena engajamento |
+| Equipaments | Relacional | Link migra para Data Log Prices |
+| Read | Relacional | Link migra para Data Log Prices |
+| Dictionary | Texto | Verificação de duplicidade pelo nome |
+| Life wishes | Texto | Verificação de duplicidade pelo nome |
+| Life goals | Texto | Verificação de duplicidade pelo nome |
 
 ## Stack
 
 - **Runtime:** Google Apps Script (GAS)
-- **Language:** JavaScript (ES5/ES6 compatible with GAS)
-- **Integrations:** Notion API, Telegram Bot API, YouTube Data API (GAS Advanced Service), Spotify API
-- **Scraping:** Local scraper via HTTP with `x-api-key` (fallback for bot-protected pages)
+- **Linguagem:** JavaScript (ES5/ES6 compatível com GAS)
+- **Integrações:** Notion API, Telegram Bot API, YouTube Data API (GAS Advanced Service), Spotify API
+- **Scraping:** Scraper local via HTTP com `x-api-key` (fallback para páginas protegidas por bot)
 
-## Setup
+## Configuração
 
-### 1. Copy files to Google Apps Script
+### 1. Copiar os arquivos para o Google Apps Script
 
-Create a new GAS project and add each `.gs` file. Enable the **YouTube Data API v3** Advanced Service.
+Criar um novo projeto GAS e adicionar cada arquivo `.gs`. Habilitar o **YouTube Data API v3** em Serviços Avançados.
 
-### 2. Configure Script Properties
+### 2. Configurar as Script Properties
 
-In the GAS Editor, go to **Project Settings → Script Properties** and add the following keys:
+No GAS Editor, acessar **Project Settings → Script Properties** e adicionar as seguintes chaves:
 
-| Key | Description |
+| Chave | Descrição |
 |---|---|
-| `NOTION_API_KEY` | Notion integration token |
-| `TELEGRAM_BOT_TOKEN_REPORT` | Bot token for business report messages |
-| `TELEGRAM_BOT_TOKEN_LOG` | Bot token for technical log messages |
-| `TELEGRAM_CHAT_ID` | Recipient chat ID |
-| `SPOTIFY_CLIENT_ID` | Spotify app client ID |
-| `SPOTIFY_CLIENT_SECRET` | Spotify app client secret |
-| `NOTION_DB_ARTICLES_ID` | Notion database ID |
-| `NOTION_DB_AUDIOVISUAL_ID` | Notion database ID |
-| `NOTION_DB_BOOKS_ID` | Notion database ID |
-| `NOTION_DB_CLOTHES_ID` | Notion database ID |
-| `NOTION_DB_DICTIONARY_ID` | Notion database ID |
-| `NOTION_DB_EQUIPAMENTS_ID` | Notion database ID |
-| `NOTION_DB_LIFE_WISHES_ID` | Notion database ID |
-| `NOTION_DB_LIFE_GOALS_ID` | Notion database ID |
-| `NOTION_DB_PODCASTS_ID` | Notion database ID |
-| `NOTION_DB_READ_ID` | Notion database ID |
-| `NOTION_DB_SITES_ID` | Notion database ID |
-| `NOTION_DB_DATA_LOG_PRICES_ID` | Notion database ID |
-| `NOTION_DB_ARCHIVE_ID` | Contingency archive database ID |
-| `LANGUAGE_ID_ENGLISH` | Notion relation ID for English |
-| `LANGUAGE_ID_PORTUGUESE` | Notion relation ID for Portuguese |
-| `ENGAGEMENT_ID_THOROUGHLY_ENGAGED` | Notion relation ID |
-| `ENGAGEMENT_ID_ENGAGED` | Notion relation ID |
-| `ENGAGEMENT_ID_OK` | Notion relation ID |
-| `ENGAGEMENT_ID_DISENGAGED` | Notion relation ID |
-| `ENGAGEMENT_ID_ACTIVELY_DISENGAGED` | Notion relation ID |
-| `LOCAL_SCRAPER_URL` | URL of the local scraper service (optional) |
-| `LOCAL_SCRAPER_API_KEY` | API key for the local scraper (optional) |
+| `NOTION_API_KEY` | Token de integração do Notion |
+| `TELEGRAM_BOT_TOKEN_REPORT` | Token do bot para mensagens de relatório |
+| `TELEGRAM_BOT_TOKEN_LOG` | Token do bot para mensagens de log técnico |
+| `TELEGRAM_CHAT_ID` | Chat ID do destinatário |
+| `SPOTIFY_CLIENT_ID` | Client ID do app Spotify |
+| `SPOTIFY_CLIENT_SECRET` | Client Secret do app Spotify |
+| `NOTION_DB_ARTICLES_ID` | ID do banco de dados Notion |
+| `NOTION_DB_AUDIOVISUAL_ID` | ID do banco de dados Notion |
+| `NOTION_DB_BOOKS_ID` | ID do banco de dados Notion |
+| `NOTION_DB_CLOTHES_ID` | ID do banco de dados Notion |
+| `NOTION_DB_DICTIONARY_ID` | ID do banco de dados Notion |
+| `NOTION_DB_EQUIPAMENTS_ID` | ID do banco de dados Notion |
+| `NOTION_DB_LIFE_WISHES_ID` | ID do banco de dados Notion |
+| `NOTION_DB_LIFE_GOALS_ID` | ID do banco de dados Notion |
+| `NOTION_DB_PODCASTS_ID` | ID do banco de dados Notion |
+| `NOTION_DB_READ_ID` | ID do banco de dados Notion |
+| `NOTION_DB_SITES_ID` | ID do banco de dados Notion |
+| `NOTION_DB_DATA_LOG_PRICES_ID` | ID do banco de dados Notion |
+| `NOTION_DB_ARCHIVE_ID` | ID do banco de dados de contingência |
+| `LANGUAGE_ID_ENGLISH` | ID de relação Notion para Inglês |
+| `LANGUAGE_ID_PORTUGUESE` | ID de relação Notion para Português |
+| `ENGAGEMENT_ID_THOROUGHLY_ENGAGED` | ID de relação Notion |
+| `ENGAGEMENT_ID_ENGAGED` | ID de relação Notion |
+| `ENGAGEMENT_ID_OK` | ID de relação Notion |
+| `ENGAGEMENT_ID_DISENGAGED` | ID de relação Notion |
+| `ENGAGEMENT_ID_ACTIVELY_DISENGAGED` | ID de relação Notion |
+| `LOCAL_SCRAPER_URL` | URL do serviço de scraper local (opcional) |
+| `LOCAL_SCRAPER_API_KEY` | Chave de API do scraper local (opcional) |
 
-### 3. Deploy as Web App
+### 3. Publicar como Web App
 
-In the GAS Editor: **Deploy → New deployment → Web App**. Set "Who has access" to **Anyone** so the iOS Shortcut can reach it.
+No GAS Editor: **Implantar → Nova implantação → App da Web**. Definir "Quem tem acesso" como **Qualquer pessoa** para que o iOS Shortcut consiga alcançar o endpoint.
 
-### 4. Configure iOS Shortcut
+### 4. Configurar o iOS Shortcut
 
-Send a POST request to the deployment URL with a JSON body:
+Enviar uma requisição POST para a URL da implantação com o corpo em JSON:
 
 ```json
 {
   "target_table": "Articles",
-  "input_data": "https://example.com/article",
+  "input_data": "https://exemplo.com/artigo",
   "engagement_selected": "Engaged",
   "description_input": ""
 }
 ```
 
-## Scraper fallback
+## Contingência do scraper
 
-If a URL is blocked by Cloudflare or returns 403/429/503, the system attempts to fetch via a local scraper service. If the scraper is offline or not configured, the raw input is saved to the Archive database in Notion and the user is notified via Telegram.
+Se uma URL for bloqueada por Cloudflare ou retornar 403/429/503, o sistema tenta buscar via scraper local. Se o scraper estiver offline ou não configurado, o input bruto é salvo no banco de dados Archive no Notion e o usuário é notificado via Telegram.
 
-## Testing
+## Testes
 
-Each table has a corresponding test function in `tests.gs` (e.g. `fluxoArticles`, `fluxoBooks`) that can be triggered manually from the GAS Editor. Test data is configured in `config.gs`.
+Cada tabela possui uma função de teste correspondente em `tests.gs` (ex: `fluxoArticles`, `fluxoBooks`) que pode ser executada manualmente pelo GAS Editor. Os dados de teste são configurados em `config.gs`.
