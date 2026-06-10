@@ -2,7 +2,7 @@
 
 Sistema em Google Apps Script que recebe um webhook do iOS Shortcuts, extrai metadados de URLs, cria páginas no Notion e envia um relatório via Telegram.
 
-## Como funciona
+## Como funciona (teste)
 
 1. Um iOS Shortcut dispara um HTTP POST com `target_table`, `input_data`, `engagement_selected` e `description_input`
 2. O sistema limpa o input, verifica duplicidade e roteia por plataforma (YouTube, Spotify ou URL geral)
