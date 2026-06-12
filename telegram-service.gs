@@ -55,8 +55,11 @@ function sendReportTelegramLog(targetTable, inputData, creationResult, payload, 
         statusIcon = "⚠️"; 
         statusText = "Sucesso Parcial (Sem Metadados)";
     } else if (creationResult && creationResult.status === "SUCCESS") {
-        statusIcon = "✅"; 
+        statusIcon = "✅";
         statusText = "Sucesso";
+    } else if (creationResult && creationResult.status === "UPDATED") {
+        statusIcon = "➕";
+        statusText = "Creator Atualizado";
     } else {
         statusIcon = "⚠️"; 
         statusText = "Verificar Logs";

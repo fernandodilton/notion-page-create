@@ -52,7 +52,13 @@ function doPost(e) {
             return ContentService.createTextOutput("");
         }
 
-        // 3. Sucesso na Criação
+        // 3. Creator Atualizado
+        if (result && result.status === "UPDATED") {
+            sendReportTelegramLog(targetTable, inputData, result, payload, false, null, correlationId);
+            return ContentService.createTextOutput("");
+        }
+
+        // 4. Sucesso na Criação
         if (result && result.databaseId && result.properties) {
             captureLog("CRIAÇÃO: Enviando requisição para o Notion...");
             const creationResult = createNotionPage(result.databaseId, result.properties, result.coverUrl, result.pageIconUrl, result.metadataStatus); 

@@ -114,6 +114,7 @@ Shortcut iOS/macOS que captura a URL ou texto em foco, detecta a plataforma, col
            │       │              "📃 Read"
            │       │              "🌐 Sites"
            │       │              "📲 Social posts"
+           │       │              "👤 Creators"
            │       │
            │       └─ Otherwise
            │              24. List               ← tabelas para inputs sem URL
@@ -199,3 +200,4 @@ Shortcut iOS/macOS que captura a URL ou texto em foco, detecta a plataforma, col
 - A URL do endpoint GAS está configurada diretamente na action 34 do shortcut
 - A remoção do emoji nos nomes de tabela usa o regex `^.*? ` (apaga tudo até o primeiro espaço)
 - A detecção de Medium usa o texto `"Medium Logo"` presente na página, não no domínio
+- **Conflito YouTube Shorts / Creators**: URLs de perfil de criadores no YouTube Shorts (`youtube.com/@user/shorts`) contêm `youtube.com/` e são interceptadas pelo passo 19 (Audio-visual). Para rotear corretamente para Creators, adicionar ao Shortcut uma condição anterior ao passo 19 que verifique se a URL contém `youtube.com/@` E `/shorts` — nesse caso, definir `TARGET_TABLE = "Creators"` diretamente em vez de seguir para Audio-visual

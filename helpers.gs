@@ -173,3 +173,30 @@ function extractRawLanguageCode(cleanText) {
     }
     return pt > en ? 'pt' : (en > pt ? 'en' : null);
 }
+
+function extractCreatorPlatform(url) {
+    if (!url) return null;
+    const domainMatch = url.match(/^https?:\/\/(?:www\.)?([^/?#]+)/i);
+    if (!domainMatch) return null;
+    const domain = domainMatch[1].toLowerCase();
+    if (domain === "instagram.com") return "Instagram";
+    if (domain === "twitter.com" || domain === "x.com") return "X";
+    if (domain === "tiktok.com") return "TikTok";
+    if (domain === "youtube.com" && url.toLowerCase().includes("/shorts")) return "YouTube Shorts";
+    if (domain === "youtube.com") return "YouTube";
+    if (domain === "linkedin.com") return "LinkedIn";
+    if (domain === "medium.com") return "Medium";
+    return null;
+}
+
+function extractCreatorUsername(url, platform) {
+    if (!url || !platform) return null;
+    const pathMatch = url.match(/^https?:\/\/(?:www\.)?[^/?#]+\/(.+?)(?:[?#].*)?$/i);
+    if (!pathMatch) return null;
+    const segments = pathMatch[1].split("/").filter(Boolean);
+    if (!segments.length) return null;
+    if (platform === "LinkedIn" && (segments[0].toLowerCase() === "in" || segments[0].toLowerCase() === "company")) {
+        return segments[1] ? segments[1].replace(/^@/, "") : null;
+    }
+    return segments[0].replace(/^@/, "");
+}

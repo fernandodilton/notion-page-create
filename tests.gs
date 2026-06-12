@@ -48,6 +48,10 @@ function fluxoSites() {
     return doPost(e);
 }
 function fluxoSocialPosts() {
-    const e = { postData: { contents: JSON.stringify({ action: "create_page", target_table: "Social posts", input_data: "https://www.instagram.com/p/exemplo" }), type: 'application/json' } };
+    const e = { postData: { contents: JSON.stringify({ action: "create_page", target_table: "Social posts" }), type: 'application/json' } };
+    return doPost(e);
+}
+function fluxoCreators() {
+    const e = { postData: { contents: JSON.stringify({ action: "create_page", target_table: "Creators" }), type: 'application/json' } };
     return doPost(e);
 }

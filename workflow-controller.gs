@@ -19,7 +19,7 @@ function routeToExecutionFlow(targetTable, inputData, engagementSelected, descri
 
     // 2. CONFIGURAÇÃO DE DUPLICIDADE (Orientada ao Destino - Seção III, Passo 4)
     const tableConfigs = {
-        "Articles": { id: SECRETS.NOTION_DB_ARTICLES_ID, dupProp: "Link", dupType: "url", isRelational: false },
+        "Articles": { id: SECRETS.NTION_DB_ARTICLES_ID, dupProp: "Link", dupType: "url", isRelational: false },
         "Audio-visual": { id: SECRETS.NOTION_DB_AUDIOVISUAL_ID, dupProp: "Link", dupType: "url", isRelational: false },
         "Podcasts": { id: SECRETS.NOTION_DB_PODCASTS_ID, dupProp: "Link", dupType: "url", isRelational: false },
         "Sites": { id: SECRETS.NOTION_DB_SITES_ID, dupProp: "Link", dupType: "url", isRelational: false },
@@ -27,6 +27,7 @@ function routeToExecutionFlow(targetTable, inputData, engagementSelected, descri
         "Life wishes": { id: SECRETS.NOTION_DB_LIFE_WISHES_ID, dupProp: "Name", dupType: "title", isRelational: false },
         "Life goals": { id: SECRETS.NOTION_DB_LIFE_GOALS_ID, dupProp: "Name", dupType: "title", isRelational: false },
         "Social posts": { id: SECRETS.NOTION_DB_SOCIAL_POSTS_ID, dupProp: "Link", dupType: "url", isRelational: false },
+        "Creators": { id: SECRETS.NOTION_DB_CREATORS_ID, dupProp: null, dupType: "skip", isRelational: false },
 
         // Fluxos Relacionais: Validação ocorre na base de Log de Preços
         "Books": { id: SECRETS.NOTION_DB_BOOKS_ID, dupProp: "Link", dupType: "url", isRelational: true },
@@ -44,7 +45,7 @@ function routeToExecutionFlow(targetTable, inputData, engagementSelected, descri
 
     // 3. VERIFICAÇÃO DE DUPLICIDADE ORIENTADA AO DESTINO
     const duplicityCheckDbId = config.isRelational ? SECRETS.NOTION_DB_DATA_LOG_PRICES_ID : databaseId;
-    const dupResult = checkDuplicity(duplicityCheckDbId, config.dupProp, config.dupType, inputData);
+    const dupResult = config.dupType === "skip" ? { isDuplicate: false } : checkDuplicity(duplicityCheckDbId, config.dupProp, config.dupType, inputData);
     
     if (dupResult.isDuplicate) {
         return { 
@@ -55,9 +56,60 @@ function routeToExecutionFlow(targetTable, inputData, engagementSelected, descri
 
     // 4. PROCESSAMENTO DE EXTRAÇÃO
     if (targetTable === "Social posts") {
+        if (inputData.includes("youtube.com") || inputData.includes("youtu.be")) {
+            const vid = extractYouTubeVideoId(inputData);
+            const yt = extractYouTubeDataNative(vid);
+            properties["Name"] = { value: inputData, type: "title" };
+            properties["Link"] = { value: inputData, type: "url" };
+            return { databaseId, properties, coverUrl: yt.Cover, pageIconUrl: null, metadataStatus, inputData, targetTable };
+        }
+        if (!checkScraperStatus()) {
+            const archive = saveToLinksArchive({ target_table: targetTable, input_data: inputData, engagement_selected: engagementSelected, description_input: descriptionInput });
+            return { status: "ARCHIVED", databaseId: SECRETS.NOTION_DB_ARCHIVE_ID, pageLink: archive?.pageLink, inputData, targetTable };
+        }
+        const extraction = executeHybridExtraction(inputData, targetTable);
+        metadataStatus = extraction.status;
         properties["Name"] = { value: inputData, type: "title" };
         properties["Link"] = { value: inputData, type: "url" };
-        return { databaseId, properties, coverUrl: null, pageIconUrl: null, metadataStatus, inputData, targetTable };
+        return { databaseId, properties, coverUrl: extraction.coverUrl, pageIconUrl: null, metadataStatus, inputData, targetTable };
+    }
+
+    if (targetTable === "Creators") {
+        const platform = extractCreatorPlatform(inputData);
+        if (!platform) {
+            captureLog("CREATORS ERRO: Domínio não mapeado.");
+            return { status: "ERROR", message: "URL não corresponde a nenhuma rede social suportada em Creators.", inputData, targetTable };
+        }
+        const username = extractCreatorUsername(inputData, platform);
+        const nameCheck = checkDuplicity(databaseId, "Name", "title", username);
+        if (nameCheck.isDuplicate) {
+            const existingPlatformUrl = nameCheck.pageProperties[platform] && nameCheck.pageProperties[platform].url;
+            if (existingPlatformUrl) {
+                return {
+                    status: "DUPLICATE", databaseId, inputData, targetTable,
+                    pageLink: nameCheck.link, properties: { "Name": { value: decodeHTMLEntities(nameCheck.name), type: "title" } }
+                };
+            }
+            captureLog("CREATORS: Nickname existente. Adicionando campo " + platform + ".");
+            const updatedLink = updateNotionPageProperties(nameCheck.pageId, { [platform]: { url: inputData } });
+            if (updatedLink) {
+                return {
+                    status: "UPDATED", databaseId, inputData, targetTable,
+                    pageLink: updatedLink,
+                    properties: { "Name": { value: username, type: "title" }, [platform]: { value: inputData, type: "url" } }
+                };
+            }
+            return { status: "ERROR", message: "Falha ao atualizar página do creator.", inputData, targetTable };
+        }
+        if (!checkScraperStatus()) {
+            const archive = saveToLinksArchive({ target_table: targetTable, input_data: inputData, engagement_selected: engagementSelected, description_input: descriptionInput });
+            return { status: "ARCHIVED", databaseId: SECRETS.NOTION_DB_ARCHIVE_ID, pageLink: archive?.pageLink, inputData, targetTable };
+        }
+        const extraction = executeHybridExtraction(inputData, targetTable);
+        metadataStatus = extraction.status;
+        properties[platform] = { value: inputData, type: "url" };
+        properties["Name"] = { value: username, type: "title" };
+        return { databaseId, properties, coverUrl: null, pageIconUrl: extraction.coverUrl, metadataStatus, inputData, targetTable };
     }
 
     if (inputData && inputData.startsWith("http")) {

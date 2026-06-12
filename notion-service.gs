@@ -18,6 +18,8 @@ function checkDuplicity(databaseId, propertyName, propertyType, value) {
     let filter = {};
     if (propertyType === "url") {
         filter = { property: propertyName, url: { equals: value } };
+    } else if (propertyType === "rich_text") {
+        filter = { property: propertyName, rich_text: { equals: value } };
     } else {
         filter = { property: propertyName, title: { equals: value } };
     }
@@ -51,7 +53,7 @@ function checkDuplicity(databaseId, propertyName, propertyType, value) {
                 }
                 
                 captureLog("DUPLICIDADE ALERTA: Item encontrado: " + existingName);
-                return { isDuplicate: true, name: existingName, link: existingPage.url };
+                return { isDuplicate: true, name: existingName, link: existingPage.url, pageId: existingPage.id, pageProperties: existingPage.properties };
             }
             return { isDuplicate: false };
         }
@@ -60,6 +62,26 @@ function checkDuplicity(databaseId, propertyName, propertyType, value) {
     } catch (e) {
         captureLog("DUPLICIDADE ERRO FATAL: " + e.toString());
         return { isDuplicate: false };
+    }
+}
+
+function updateNotionPageProperties(pageId, notionProperties) {
+    const url = "https://api.notion.com/v1/pages/" + cleanUUID(pageId);
+    const options = {
+        method: "patch",
+        contentType: "application/json",
+        headers: { "Authorization": "Bearer " + SECRETS.NOTION_API_KEY, "Notion-Version": "2022-02-22" },
+        payload: JSON.stringify({ properties: notionProperties }),
+        muteHttpExceptions: true
+    };
+    try {
+        const response = UrlFetchApp.fetch(url, options);
+        if (response.getResponseCode() === 200) return JSON.parse(response.getContentText()).url;
+        captureLog("UPDATE ERRO: Status " + response.getResponseCode());
+        return null;
+    } catch (e) {
+        captureLog("UPDATE ERRO FATAL: " + e.toString());
+        return null;
     }
 }
 
@@ -100,7 +122,7 @@ function buildNotionPropertiesPayload(properties) {
         const type = prop.type;
         if (value === null && type !== "title") continue; 
         switch (type) {
-            case "title": notionProperties[propName] = { title: [{ text: { content: String(value || "Sem Título") } }] }; break;
+            case "title": notionProperties[propName] = { title: [{ text: { content: value !== null && value !== undefined ? String(value) : "Sem Título" } }] }; break;
             case "url": if (value && String(value).startsWith("http")) notionProperties[propName] = { url: value }; break;
             case "rich_text": if (value) notionProperties[propName] = { rich_text: [{ text: { content: String(value) } }] }; break;
             case "number": if (value !== null && !isNaN(value)) notionProperties[propName] = { number: Number(value) }; break;
@@ -165,12 +187,12 @@ function createNotionPage(databaseId, properties, coverUrl, pageIconUrl, metadat
         captureLog("ALERTA: Ausência de imagem de capa detectada. Status alterado para PARTIAL_FAILURE.");
     }
 
-    // RESTRIÇÃO VISUAL (Seção VI, Item 5): Ícones exclusivos para a tabela Sites
-    const isSitesDb = cleanUUID(databaseId) === cleanUUID(SECRETS.NOTION_DB_SITES_ID);
-    if (isSitesDb && pageIconUrl && String(pageIconUrl).startsWith("http")) {
+    // RESTRIÇÃO VISUAL (Seção VI, Item 5): Ícones exclusivos para Sites e Creators
+    const isIconDb = cleanUUID(databaseId) === cleanUUID(SECRETS.NOTION_DB_SITES_ID) || cleanUUID(databaseId) === cleanUUID(SECRETS.NOTION_DB_CREATORS_ID);
+    if (isIconDb && pageIconUrl && String(pageIconUrl).startsWith("http")) {
         payload.icon = { type: "external", external: { url: pageIconUrl } };
     } else if (pageIconUrl) {
-        captureLog("RESTRIÇÃO: Ícone ignorado para esta tabela (Permitido apenas em Sites e Data Log Prices).");
+        captureLog("RESTRIÇÃO: Ícone ignorado para esta tabela (Permitido apenas em Sites, Creators e Data Log Prices).");
     }
 
     const options = {

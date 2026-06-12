@@ -24,6 +24,7 @@ Sistema GAS que recebe um HTTP POST via webhook (iOS Shortcuts), processa o inpu
 - Tabelas diretas com URL (Articles, Audio-visual, Podcasts, Sites): verificar na própria tabela por `Link` (match exato de URL)
 - Tabelas diretas sem URL (Dictionary, Life wishes, Life goals): verificar na própria tabela por `Name` (match exato de texto)
 - Tabelas relacionais (Books, Clothes, Equipaments, Read): verificar na tabela `Data Log Prices` por `Link`
+- **Creators**: verificar na própria tabela pelo campo da rede social detectada (filtro `url` equals URL completa do perfil); a detecção da plataforma ocorre antes da consulta; a verificação é feita para o campo exato da rede detectada (ex: campo "Instagram" para URLs do Instagram)
 - SE duplicata encontrada: retornar `status: DUPLICATE` com nome e link da página existente; interromper fluxo; ir para Telegram
 - SE não existe: prosseguir
 - SE `databaseId` ou `value` (input a verificar) for nulo/vazio: verificação pulada, retorna `{isDuplicate: false}` imediatamente
@@ -77,7 +78,8 @@ Sistema GAS que recebe um HTTP POST via webhook (iOS Shortcuts), processa o inpu
 - **Articles**: antes da extração de Duration e Language, o HTML é pré-processado por `cleanHtmlText` (remove `<script>`, `<style>` e todas as tags HTML); extrair Release (meta/time/JSON-LD — meta tags verificadas: `article:published_time`, `datePublished`, `publishDate`, `publication_date`, `date`; JSON-LD verifica `datePublished`, `uploadDate`, `@graph[].datePublished`; todas as datas truncadas para `YYYY-MM-DD`), Duration via regex `(\d+)\s*(min\s*read|minuto|min|minute)` pesquisando nos primeiros **8000 caracteres** do texto limpo → armazenado como `number` (inteiro de minutos), Language: `LanguageApp.detect` nos primeiros 1000 chars; fallback por frequência de palavras (PT: `você, nós, porque, também, artigo`; EN: `the, and, is, with, that, this`; retorna `null` se empate)
 - **Books, Clothes, Equipaments, Read**: criar entrada em `Data Log Prices` via `createPriceLogEntry` (propriedades: `Store` [title] = siteName, `Link` [url]; ícone = favicon) → SE `createPriceLogEntry` falhar (retorna `null`), a propriedade `Data log prices` é omitida e a página principal é criada sem a relação → deletar propriedade `Link` da página principal (**o `coverUrl` é preservado** e continua sendo enviado para `createNotionPage`); para Clothes, adicionar `Engagement` via relation ID
 - **Sites**: extrair meta description via `extractMetaDescription`; se ausente no HTML, usar `description_input` do payload como fallback; aplicar `decodeHTMLEntities`; adicionar propriedade `Description`; favicon aplicado como ícone da página
-- **Social posts**: repositório de posts de redes sociais (Instagram, Twitter/X, TikTok e similares); sem scraping, sem extração de metadados; `Name` e `Link` recebem a própria URL do post; verificação de duplicidade por `Link`
+- **Social posts**: repositório de posts de redes sociais (Instagram, Twitter/X, TikTok e similares); `Name` e `Link` recebem a própria URL do post; verificação de duplicidade por `Link`; verificação de scraper: offline → ARCHIVED; online → `executeHybridExtraction` para obter OG image como capa da página
+- **Creators**: repositório de criadores de conteúdo; input é a URL do perfil do criador; plataforma detectada pelo domínio (instagram.com → Instagram, twitter.com/x.com → X, tiktok.com → TikTok, youtube.com com /shorts no path → YouTube Shorts, linkedin.com → LinkedIn, medium.com → Medium); `Name` recebe o username extraído da URL; campo da rede (tipo url) recebe a URL completa; duplicidade verificada por `Name` (title equals username): se página existir e o campo da rede estiver preenchido → DUPLICATE; se campo vazio → atualiza a página existente via PATCH (`status: UPDATED`); se página não existir → verificar scraper: offline → ARCHIVED; online → `executeHybridExtraction` para obter OG image; OG image aplicada como ícone da página; sem capa; domínio não mapeado retorna `status: ERROR`; YouTube URLs sem /shorts são ignoradas
 - **Dictionary, Life wishes, Life goals**: mapear apenas `Name` (sem URL, sem scraping)
 
 **Normalização de conversores:**
@@ -87,7 +89,7 @@ Sistema GAS que recebe um HTTP POST via webhook (iOS Shortcuts), processa o inpu
 ## Fase 5 — Criação no Notion
 - Chamar `createNotionPage` com databaseId, properties, coverUrl, pageIconUrl, metadataStatus
 - Capa (cover): obrigatória para fluxos de URL; se `coverUrl` ausente e propriedade `Link` presente, definir `metadataStatus: PARTIAL_FAILURE`
-- Ícone (icon) em `createNotionPage`: aplicado **somente** para a tabela Sites; ignorado silenciosamente para todas as demais
+- Ícone (icon) em `createNotionPage`: aplicado para Sites e Creators; ignorado silenciosamente para todas as demais
 - Ícone em `Data Log Prices`: aplicado dentro de `createPriceLogEntry` (caminho separado de `createNotionPage`)
 - Propriedades nulas são omitidas do payload (exceto title, que usa `"Sem Título"` como fallback)
 - SE a API Notion retornar não-200: `createNotionPage` lança exceção → capturada pelo `catch` de `doPost` → Telegram de Falha Total

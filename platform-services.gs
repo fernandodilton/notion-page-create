@@ -9,7 +9,8 @@ function extractYouTubeVideoId(url) {
     if (!url) return null;
     const regexWatch = /watch\?v=([a-zA-Z0-9_-]{11})/;
     const regexShort = /youtu\.be\/([a-zA-Z0-9_-]{11})/;
-    let match = url.match(regexWatch) || url.match(regexShort);
+    const regexShortsPath = /\/shorts\/([a-zA-Z0-9_-]{11})/;
+    let match = url.match(regexWatch) || url.match(regexShort) || url.match(regexShortsPath);
     const id = match ? match[1] : null;
     if (id) captureLog(`YOUTUBE INFO: ID do Vídeo extraído: ${id}`);
     return id;
