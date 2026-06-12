@@ -47,3 +47,7 @@ function fluxoSites() {
     const e = { postData: { contents: JSON.stringify({ action: "create_page", target_table: "Sites" }), type: 'application/json' } };
     return doPost(e);
 }
+function fluxoSocialPosts() {
+    const e = { postData: { contents: JSON.stringify({ action: "create_page", target_table: "Social posts", input_data: "https://www.instagram.com/p/exemplo" }), type: 'application/json' } };
+    return doPost(e);
+}

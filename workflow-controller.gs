@@ -26,7 +26,8 @@ function routeToExecutionFlow(targetTable, inputData, engagementSelected, descri
         "Dictionary": { id: SECRETS.NOTION_DB_DICTIONARY_ID, dupProp: "Name", dupType: "title", isRelational: false },
         "Life wishes": { id: SECRETS.NOTION_DB_LIFE_WISHES_ID, dupProp: "Name", dupType: "title", isRelational: false },
         "Life goals": { id: SECRETS.NOTION_DB_LIFE_GOALS_ID, dupProp: "Name", dupType: "title", isRelational: false },
-        
+        "Social posts": { id: SECRETS.NOTION_DB_SOCIAL_POSTS_ID, dupProp: "Link", dupType: "url", isRelational: false },
+
         // Fluxos Relacionais: Validação ocorre na base de Log de Preços
         "Books": { id: SECRETS.NOTION_DB_BOOKS_ID, dupProp: "Link", dupType: "url", isRelational: true },
         "Clothes": { id: SECRETS.NOTION_DB_CLOTHES_ID, dupProp: "Link", dupType: "url", isRelational: true },
@@ -53,7 +54,13 @@ function routeToExecutionFlow(targetTable, inputData, engagementSelected, descri
     }
 
     // 4. PROCESSAMENTO DE EXTRAÇÃO
-    if (inputData && inputData.startsWith("http")) { 
+    if (targetTable === "Social posts") {
+        properties["Name"] = { value: inputData, type: "title" };
+        properties["Link"] = { value: inputData, type: "url" };
+        return { databaseId, properties, coverUrl: null, pageIconUrl: null, metadataStatus, inputData, targetTable };
+    }
+
+    if (inputData && inputData.startsWith("http")) {
         if (inputData.includes("youtube.com") || inputData.includes("youtu.be")) {
             const vid = extractYouTubeVideoId(inputData);
             const yt = extractYouTubeDataNative(vid); 
