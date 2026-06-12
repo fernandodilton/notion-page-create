@@ -109,27 +109,28 @@ function extractOGImage(html, title, baseUrl) {
     // 1. Prioridade: og:image
     const ogMatch = html.match(/<meta[^>]*property\s*=\s*["']og:image["'][^>]*content\s*=\s*["']([^"']*)["']/i) ||
                     html.match(/<meta[^>]*content\s*=\s*["']([^"']*)["'][^>]*property\s*=\s*["']og:image["']/i);
-    if (ogMatch && ogMatch[1]) return resolveUrl(ogMatch[1].trim(), baseUrl);
+    if (ogMatch && ogMatch[1]) { const url = resolveUrl(decodeHTMLEntities(ogMatch[1].trim()), baseUrl); captureLog("IMAGEM: og:image → " + url); return url; }
 
     // 2. Fallback: twitter:image
     const twMatch = html.match(/<meta[^>]*name\s*=\s*["']twitter:image["'][^>]*content\s*=\s*["']([^"']*)["']/i);
-    if (twMatch && twMatch[1]) return resolveUrl(twMatch[1].trim(), baseUrl);
+    if (twMatch && twMatch[1]) { const url = resolveUrl(decodeHTMLEntities(twMatch[1].trim()), baseUrl); captureLog("IMAGEM: twitter:image → " + url); return url; }
 
     // 3. Fallback: landingImage (Preferindo Alta Resolução - data-old-hires)
     const landingMatch = html.match(/<img[^>]*id\s*=\s*["']landingImage["'][^>]*>/i);
     if (landingMatch) {
         const tag = landingMatch[0];
         const hiresMatch = tag.match(/data-old-hires\s*=\s*["']([^"']*)["']/i);
-        if (hiresMatch && hiresMatch[1]) return resolveUrl(hiresMatch[1].trim(), baseUrl);
-        
+        if (hiresMatch && hiresMatch[1]) { const url = resolveUrl(decodeHTMLEntities(hiresMatch[1].trim()), baseUrl); captureLog("IMAGEM: landingImage[data-old-hires] → " + url); return url; }
+
         const srcMatch = tag.match(/src\s*=\s*["']([^"']*)["']/i);
-        if (srcMatch && srcMatch[1]) return resolveUrl(srcMatch[1].trim(), baseUrl);
+        if (srcMatch && srcMatch[1]) { const url = resolveUrl(decodeHTMLEntities(srcMatch[1].trim()), baseUrl); captureLog("IMAGEM: landingImage[src] → " + url); return url; }
     }
 
     // 4. Fallback Tradicional: link image_src
     const srcMatch = html.match(/<link[^>]*rel\s*=\s*["']image_src["'][^>]*href\s*=\s*["']([^"']*)["']/i);
-    if (srcMatch && srcMatch[1]) return resolveUrl(srcMatch[1].trim(), baseUrl);
+    if (srcMatch && srcMatch[1]) { const url = resolveUrl(decodeHTMLEntities(srcMatch[1].trim()), baseUrl); captureLog("IMAGEM: image_src → " + url); return url; }
 
+    captureLog("IMAGEM: Nenhuma fonte encontrada (og:image, twitter:image, landingImage, image_src).");
     return null;
 }
 
