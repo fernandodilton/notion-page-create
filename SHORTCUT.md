@@ -155,19 +155,42 @@ Shortcut iOS/macOS que captura a URL ou texto em foco, detecta a plataforma, col
 30. Set Variable: ENGAGEMENT_SELECTED
     └─ value: [Selected Item]                    ← item escolhido ou vazio
 
-31. If  ─ [TARGET_TABLE] is "Life wishes"
+31. If  ─ [TARGET_TABLE] is "Social posts"
+    │
+    ├─ 32. List
+    │       └─ items:
+    │              "Idea"
+    │              "Favorite"
+    │
+    ├─ 33. Choose from List
+    │       └─ prompt: "Tipo de post:"
+    │       └─ Allow Multiple Selection: on
+    │       └─ output → "Selected Type"
+    │
+    ├─ 34. Combine Text
+    │       └─ input: [Selected Type]
+    │       └─ separator: ","
+    │       └─ output → "Combined Type"
+    │
+    └─ Otherwise
+           (Combined Type = vazio)
+
+35. Set Variable: TYPE_SELECTED
+    └─ value: [Combined Type]                    ← opções escolhidas separadas por vírgula, ou vazio
+
+36. If  ─ [TARGET_TABLE] is "Life wishes"
         OR [TARGET_TABLE] is "Life goals"
     │
-    ├─ 32. Ask for Input                         ← usuário digita nome ou descrição do item
+    ├─ 37. Ask for Input                         ← usuário digita nome ou descrição do item
     │       └─ output → "Provided Input"
     │
     └─ Otherwise
            (DESCRIPTION_INPUT = vazio)
 
-33. Set Variable: DESCRIPTION_INPUT
+38. Set Variable: DESCRIPTION_INPUT
     └─ value: [Provided Input]                   ← texto digitado ou vazio
 
-34. Get Contents of URL  ─  POST
+39. Get Contents of URL  ─  POST
     └─ url: <GAS_DEPLOYMENT_URL>
     └─ method: POST
     └─ body type: JSON
@@ -177,6 +200,7 @@ Shortcut iOS/macOS que captura a URL ou texto em foco, detecta a plataforma, col
              "input_data":         [INPUT_DATA],
              "target_table":       [TARGET_TABLE],
              "engagement_selected":[ENGAGEMENT_SELECTED],
+             "type_selected":      [TYPE_SELECTED],
              "description_input":  [DESCRIPTION_INPUT]
            }
 ```
@@ -190,6 +214,7 @@ Shortcut iOS/macOS que captura a URL ou texto em foco, detecta a plataforma, col
 | `INPUT_DATA` | String / URL | Captura automática ou input manual do usuário |
 | `TARGET_TABLE` | String | Detecção automática ou seleção do usuário |
 | `ENGAGEMENT_SELECTED` | String | Seleção do usuário (apenas Clothes) ou vazio |
+| `TYPE_SELECTED` | String | Opções separadas por vírgula (apenas Social posts) ou vazio — ex: `"Idea,Favorite"` |
 | `DESCRIPTION_INPUT` | String | Input do usuário (apenas Life wishes / Life goals) ou vazio |
 
 ---

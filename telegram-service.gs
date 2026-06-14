@@ -59,7 +59,7 @@ function sendReportTelegramLog(targetTable, inputData, creationResult, payload, 
         statusText = "Sucesso";
     } else if (creationResult && creationResult.status === "UPDATED") {
         statusIcon = "➕";
-        statusText = "Creator Atualizado";
+        statusText = escapeHTML(targetTable || "Item") + " Atualizado";
     } else {
         statusIcon = "⚠️"; 
         statusText = "Verificar Logs";

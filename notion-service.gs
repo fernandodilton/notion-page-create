@@ -128,6 +128,12 @@ function buildNotionPropertiesPayload(properties) {
             case "number": if (value !== null && !isNaN(value)) notionProperties[propName] = { number: Number(value) }; break;
             case "relation": if (value) notionProperties[propName] = { relation: [{ id: value.trim() }] }; break;
             case "date": if (value) notionProperties[propName] = { date: { start: value } }; break;
+            case "multi_select":
+                if (value) {
+                    const opts = String(value).split(",").map(v => v.trim()).filter(Boolean).map(v => ({ name: v }));
+                    if (opts.length) notionProperties[propName] = { multi_select: opts };
+                }
+                break;
         }
     }
     return notionProperties;

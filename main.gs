@@ -28,11 +28,12 @@ function doPost(e) {
         let rawInputData = getPayloadValue(payload, "input_data") || "";
         let engagementSelected = getPayloadValue(payload, "engagement_selected") || "";
         let descriptionInput = getPayloadValue(payload, "description_input") || "";
-        
+        let typeSelected = getPayloadValue(payload, "type_selected") || "";
+
         inputData = rawInputData ? cleanInputLink(rawInputData) : "";
         captureLog("FLUXO: Input processado como: " + (inputData || "vazio"));
 
-        let result = routeToExecutionFlow(targetTable, inputData, engagementSelected, descriptionInput);
+        let result = routeToExecutionFlow(targetTable, inputData, engagementSelected, descriptionInput, typeSelected);
 
         // SINCRONIZAÇÃO DO INPUT (Especialmente importante para fallback de testes)
         if (result && result.inputData) inputData = result.inputData;

@@ -3,7 +3,7 @@
 // FASE 3: CONTROLADOR DE FLUXO (Duplicidade Orientada ao Destino)
 // ====================================================================
 
-function routeToExecutionFlow(targetTable, inputData, engagementSelected, descriptionInput) {
+function routeToExecutionFlow(targetTable, inputData, engagementSelected, descriptionInput, typeSelected) {
     let databaseId;
     let properties = {};
     let htmlContent = null; 
@@ -26,7 +26,7 @@ function routeToExecutionFlow(targetTable, inputData, engagementSelected, descri
         "Dictionary": { id: SECRETS.NOTION_DB_DICTIONARY_ID, dupProp: "Name", dupType: "title", isRelational: false },
         "Life wishes": { id: SECRETS.NOTION_DB_LIFE_WISHES_ID, dupProp: "Name", dupType: "title", isRelational: false },
         "Life goals": { id: SECRETS.NOTION_DB_LIFE_GOALS_ID, dupProp: "Name", dupType: "title", isRelational: false },
-        "Social posts": { id: SECRETS.NOTION_DB_SOCIAL_POSTS_ID, dupProp: "Link", dupType: "url", isRelational: false },
+        "Social posts": { id: SECRETS.NOTION_DB_SOCIAL_POSTS_ID, dupProp: null, dupType: "skip", isRelational: false },
         "Creators": { id: SECRETS.NOTION_DB_CREATORS_ID, dupProp: null, dupType: "skip", isRelational: false },
 
         // Fluxos Relacionais: Validação ocorre na base de Log de Preços
@@ -56,11 +56,32 @@ function routeToExecutionFlow(targetTable, inputData, engagementSelected, descri
 
     // 4. PROCESSAMENTO DE EXTRAÇÃO
     if (targetTable === "Social posts") {
+        const spDup = checkDuplicity(databaseId, "Link", "url", inputData);
+        if (spDup.isDuplicate) {
+            const updatePayload = {};
+            if (typeSelected) {
+                const existingTypes = (spDup.pageProperties["Type"]?.multi_select || []).map(t => t.name).sort().join(",");
+                const incomingTypes = typeSelected.split(",").map(v => v.trim()).filter(Boolean).sort().join(",");
+                if (existingTypes !== incomingTypes) {
+                    updatePayload["Type"] = { multi_select: typeSelected.split(",").map(v => v.trim()).filter(Boolean).map(v => ({ name: v })) };
+                }
+            }
+            if (Object.keys(updatePayload).length > 0) {
+                captureLog("SOCIAL POSTS: Duplicado encontrado com propriedades diferentes. Atualizando.");
+                const updatedLink = updateNotionPageProperties(spDup.pageId, updatePayload);
+                if (updatedLink) {
+                    return { status: "UPDATED", databaseId, inputData, targetTable, pageLink: updatedLink, properties: { "Name": { value: inputData, type: "title" }, "Type": { value: typeSelected, type: "multi_select" } } };
+                }
+                return { status: "ERROR", message: "Falha ao atualizar página de Social posts.", inputData, targetTable };
+            }
+            return { status: "DUPLICATE", databaseId, inputData, targetTable, pageLink: spDup.link, properties: { "Name": { value: decodeHTMLEntities(spDup.name), type: "title" } } };
+        }
         if (inputData.includes("youtube.com") || inputData.includes("youtu.be")) {
             const vid = extractYouTubeVideoId(inputData);
             const yt = extractYouTubeDataNative(vid);
             properties["Name"] = { value: inputData, type: "title" };
             properties["Link"] = { value: inputData, type: "url" };
+            if (typeSelected) properties["Type"] = { value: typeSelected, type: "multi_select" };
             return { databaseId, properties, coverUrl: yt.Cover, pageIconUrl: null, metadataStatus, inputData, targetTable };
         }
         if (!checkScraperStatus()) {
@@ -71,6 +92,7 @@ function routeToExecutionFlow(targetTable, inputData, engagementSelected, descri
         metadataStatus = extraction.status;
         properties["Name"] = { value: inputData, type: "title" };
         properties["Link"] = { value: inputData, type: "url" };
+        if (typeSelected) properties["Type"] = { value: typeSelected, type: "multi_select" };
         return { databaseId, properties, coverUrl: extraction.coverUrl, pageIconUrl: null, metadataStatus, inputData, targetTable };
     }
 
