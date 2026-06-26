@@ -85,7 +85,7 @@ function routeToExecutionFlow(targetTable, inputData, engagementSelected, descri
             return { databaseId, properties, coverUrl: yt.Cover, pageIconUrl: null, metadataStatus, inputData, targetTable };
         }
         if (!checkScraperStatus()) {
-            const archive = saveToLinksArchive({ target_table: targetTable, input_data: inputData, engagement_selected: engagementSelected, description_input: descriptionInput });
+            const archive = saveToLinksArchive({ target_table: targetTable, input_data: inputData, engagement_selected: engagementSelected, type_selected: typeSelected, description_input: descriptionInput });
             return { status: "ARCHIVED", databaseId: SECRETS.NOTION_DB_ARCHIVE_ID, pageLink: archive?.pageLink, inputData, targetTable };
         }
         const extraction = executeHybridExtraction(inputData, targetTable);
@@ -124,7 +124,7 @@ function routeToExecutionFlow(targetTable, inputData, engagementSelected, descri
             return { status: "ERROR", message: "Falha ao atualizar página do creator.", inputData, targetTable };
         }
         if (!checkScraperStatus()) {
-            const archive = saveToLinksArchive({ target_table: targetTable, input_data: inputData, engagement_selected: engagementSelected, description_input: descriptionInput });
+            const archive = saveToLinksArchive({ target_table: targetTable, input_data: inputData, engagement_selected: engagementSelected, type_selected: typeSelected, description_input: descriptionInput });
             return { status: "ARCHIVED", databaseId: SECRETS.NOTION_DB_ARCHIVE_ID, pageLink: archive?.pageLink, inputData, targetTable };
         }
         const extraction = executeHybridExtraction(inputData, targetTable);
@@ -158,7 +158,7 @@ function routeToExecutionFlow(targetTable, inputData, engagementSelected, descri
         }
 
         if (!checkScraperStatus()) {
-            const archive = saveToLinksArchive({ target_table: targetTable, input_data: inputData, engagement_selected: engagementSelected, description_input: descriptionInput });
+            const archive = saveToLinksArchive({ target_table: targetTable, input_data: inputData, engagement_selected: engagementSelected, type_selected: typeSelected, description_input: descriptionInput });
             return { status: "ARCHIVED", databaseId: SECRETS.NOTION_DB_ARCHIVE_ID, pageLink: archive?.pageLink, inputData, targetTable };
         }
 

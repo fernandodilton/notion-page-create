@@ -96,6 +96,7 @@ function saveToLinksArchive(data) {
             "input_data": { title: [{ text: { content: data.input_data || "" } }] },
             "target_table": { rich_text: [{ text: { content: data.target_table || "" } }] },
             "engagement_selected": { rich_text: [{ text: { content: data.engagement_selected || "" } }] },
+            "type_selected": { rich_text: [{ text: { content: data.type_selected || "" } }] },
             "description_input": { rich_text: [{ text: { content: data.description_input || "" } }] }
         }
     };
@@ -184,13 +185,11 @@ function createNotionPage(databaseId, properties, coverUrl, pageIconUrl, metadat
         properties: buildNotionPropertiesPayload(properties)
     };
     
-    // REGRA DE CAPA (Fase 3 & Seção VI, Item 6): Obrigatória para fluxos de URL
+    // CAPA: opcional para todos os fluxos
     if (coverUrl && String(coverUrl).startsWith("http")) {
         payload.cover = { type: "external", external: { url: coverUrl } };
     } else if (properties["Link"]) {
-        // Se há um link mas não há capa, é considerada falha parcial de extração
-        currentMetadataStatus = "PARTIAL_FAILURE";
-        captureLog("ALERTA: Ausência de imagem de capa detectada. Status alterado para PARTIAL_FAILURE.");
+        captureLog("INFO: Imagem de capa não encontrada. Página será criada sem capa.");
     }
 
     // RESTRIÇÃO VISUAL (Seção VI, Item 5): Ícones exclusivos para Sites e Creators
